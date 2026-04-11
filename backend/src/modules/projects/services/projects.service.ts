@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRole } from 'src/common/enums/user-role.enum';
+import type { AuthUser } from 'src/modules/auth/types/auth-user.type';
 import { Repository } from 'typeorm';
 import { CreateProjectDto } from '../dto/create-project.dto';
 import { FilterProjectsDto } from '../dto/filter-projects.dto';
 import { Project } from '../entities/project.entity';
-import { User } from 'src/modules/users/entities/user.entity';
 
 @Injectable()
 export class ProjectsService {
@@ -23,7 +23,7 @@ export class ProjectsService {
     return this.projectRepository.save(project);
   }
 
-  async findAll(user: User, filters: FilterProjectsDto) {
+  async findAll(user: AuthUser, filters: FilterProjectsDto) {
     const query = this.projectRepository
       .createQueryBuilder('project')
       .leftJoinAndSelect('project.responsible', 'responsible');
