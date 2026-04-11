@@ -28,8 +28,12 @@ export class Project {
   })
   status: ProjectStatus;
 
-  @Column({ type: 'text' })
-  goals: string;
+  @Column({ type: 'jsonb' })
+  goals: {
+    name: string;
+    target: number;
+    current: number;
+  }[];
 
   @Column({ type: 'int', default: 0 })
   progress: number;

@@ -14,7 +14,7 @@ export class SeedService implements OnModuleInit {
   }
 
   private async seedAdmin() {
-    const adminEmail = 'admin@heroforce.com';
+    const adminEmail = 'bruce@heroforce.com';
 
     const existingAdmin = await this.usersService.findByEmail(adminEmail);
 
@@ -26,10 +26,10 @@ export class SeedService implements OnModuleInit {
     const hashedPassword = await bcrypt.hash('123456', 10);
 
     await this.usersService.create({
-      name: 'Admin HeroForce',
+      name: 'Bruce Wayne',
       email: adminEmail,
       password: hashedPassword,
-      character: 'Iron Man',
+      character: 'Batman',
       role: UserRole.ADMIN,
     });
 

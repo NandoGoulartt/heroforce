@@ -1,4 +1,7 @@
+import { Type } from 'class-transformer';
 import {
+  ArrayMinSize,
+  IsArray,
   IsEnum,
   IsInt,
   IsNotEmpty,
@@ -6,6 +9,7 @@ import {
   IsUUID,
   Max,
   Min,
+  ValidateNested,
 } from 'class-validator';
 import { ProjectStatus } from 'src/common/enums/project-status.enum';
 
@@ -21,9 +25,11 @@ export class CreateProjectDto {
   @IsEnum(ProjectStatus)
   status: ProjectStatus;
 
-  @IsString()
-  @IsNotEmpty()
-  goals: string;
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => GoalDto)
+  goals: GoalDto[];
 
   @IsInt()
   @Min(0)
@@ -32,4 +38,20 @@ export class CreateProjectDto {
 
   @IsUUID()
   responsibleId: string;
+}
+
+class GoalDto {
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  target: number;
+
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  current: number;
 }
