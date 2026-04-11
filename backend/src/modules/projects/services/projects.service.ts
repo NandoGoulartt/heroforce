@@ -1,10 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserRole } from 'src/common/enums/user-role.enum';
 import type { AuthUser } from 'src/modules/auth/types/auth-user.type';
 import { Repository } from 'typeorm';
 import { CreateProjectDto } from '../dto/create-project.dto';
 import { FilterProjectsDto } from '../dto/filter-projects.dto';
+import { UpdateGoalsDto } from '../dto/update-goals.dto';
 import { UpdateProjectDto } from '../dto/update-project.dto';
 import { Project } from '../entities/project.entity';
 
@@ -111,5 +116,41 @@ export class ProjectsService {
     return {
       message: 'Project deleted successfully',
     };
+  }
+
+  async updateGoals(
+    id: string,
+    updateGoalsDto: UpdateGoalsDto,
+    user: AuthUser,
+  ) {
+    const project = await this.projectRepository.findOne({
+      where: { id },
+      relations: ['responsible'],
+    });
+
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+
+    if (user.role !== UserRole.ADMIN && project.responsible.id !== user.id) {
+      throw new ForbiddenException('You cannot update this project');
+    }
+
+    const updatedGoals = project.goals.map((existingGoal) => {
+      const updated = updateGoalsDto.goals.find(
+        (g) => g.name === existingGoal.name,
+      );
+
+      if (!updated) return existingGoal;
+
+      return {
+        ...existingGoal,
+        current: updated.current,
+      };
+    });
+
+    project.goals = updatedGoals;
+
+    return this.projectRepository.save(project);
   }
 }

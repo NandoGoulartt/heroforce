@@ -72,6 +72,7 @@ Você também pode usar diretamente no Swagger.
 * CRUD completo de projetos
 * Filtros por status e responsável
 * Metas dinâmicas por projeto
+* Atualização do progresso das metas (`current`) por administrador ou herói responsável pelo projeto
 * Documentação com Swagger
 
 ---
@@ -100,6 +101,27 @@ Cada projeto possui metas dinâmicas, permitindo flexibilidade para diferentes t
 
 Isso permite acompanhar a evolução da missão e comparar progresso com objetivo.
 
+### Atualizar o progresso das metas
+
+Heróis e administradores podem atualizar apenas o campo **current** das metas existentes (o **name** deve coincidir com uma meta já cadastrada no projeto; **target** não é alterado por esta rota).
+
+**Endpoint:** `PATCH /projects/:id/goals`
+
+**Corpo (JSON):**
+
+```json
+{
+  "goals": [
+    {
+      "name": "Segurança da Cidade",
+      "current": 75
+    }
+  ]
+}
+```
+
+* **goals** → lista com pelo menos um item; cada item informa o **name** da meta e o novo **current** (inteiro de 0 a 100).
+
 ---
 
 ## 🧠 Regras de acesso
@@ -110,11 +132,13 @@ Isso permite acompanhar a evolução da missão e comparar progresso com objetiv
 * Editar projetos
 * Remover projetos
 * Visualizar todos os projetos
+* Atualizar o progresso das metas de qualquer projeto (`PATCH /projects/:id/goals`)
 
 ### USER (Herói)
 
 * Visualizar projetos
 * Visualizar apenas projetos atribuídos a ele
+* Atualizar o progresso das metas (`PATCH /projects/:id/goals`) apenas nos projetos em que for o responsável
 
 ---
 

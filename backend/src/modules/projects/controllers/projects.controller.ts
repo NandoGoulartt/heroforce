@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { UserRole } from 'src/common/enums/user-role.enum';
@@ -17,9 +18,9 @@ import { RolesGuard } from 'src/common/guards/roles.guard';
 import type { AuthUser } from 'src/modules/auth/types/auth-user.type';
 import { CreateProjectDto } from '../dto/create-project.dto';
 import { FilterProjectsDto } from '../dto/filter-projects.dto';
+import { UpdateGoalsDto } from '../dto/update-goals.dto';
 import { UpdateProjectDto } from '../dto/update-project.dto';
 import { ProjectsService } from '../services/projects.service';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('Projects')
 @ApiBearerAuth()
@@ -61,5 +62,15 @@ export class ProjectsController {
   @ApiOperation({ summary: 'Delete a project by id (admin only)' })
   remove(@Param('id') id: string) {
     return this.projectsService.remove(id);
+  }
+
+  @Patch(':id/goals')
+  @ApiOperation({ summary: 'Update project goals progress (hero)' })
+  updateGoals(
+    @Param('id') id: string,
+    @Body() updateGoalsDto: UpdateGoalsDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.projectsService.updateGoals(id, updateGoalsDto, user);
   }
 }
