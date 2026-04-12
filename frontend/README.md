@@ -1,73 +1,69 @@
-# React + TypeScript + Vite
+# HeroForce — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interface web da plataforma HeroForce: autenticação, painel de missões, criação e edição de projetos com metas, tema visual escuro e layout responsivo.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **React 19** + **TypeScript**
+- **Vite 8**
+- **Tailwind CSS 4**
+- **React Router 7**
+- **Axios** (cliente HTTP com interceptors de sessão)
 
-## React Compiler
+## Scripts
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Comando | Descrição |
+|--------|-----------|
+| `npm run dev` | Servidor de desenvolvimento (Vite), com hot reload |
+| `npm run build` | Typecheck + build de produção em `dist/` |
+| `npm run preview` | Serve o `dist` localmente após o build |
+| `npm run lint` | ESLint |
 
-## Expanding the ESLint configuration
+## Variáveis de ambiente
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Crie um arquivo `.env` na pasta `frontend` (pode copiar de `.env.example`):
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+| Variável | Descrição |
+|----------|-----------|
+| `VITE_API_URL` | URL base da API (ex.: `http://localhost:3000`). No Vite, variáveis expostas ao browser precisam do prefixo `VITE_`. |
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Se não definir nada, o código usa `http://localhost:3000` como padrão.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Desenvolvimento local
+
+1. Suba o **backend** e o **PostgreSQL** (veja o README na raiz do repositório ou o README do backend).
+2. Na pasta `frontend`:
+
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+A aplicação costuma ficar em **http://localhost:5173**. Ajuste `VITE_API_URL` se a API estiver em outra origem.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Docker
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+A imagem é **multi-stage**: build com Node e entrega estática com **Nginx** (inclui `nginx.conf` para SPA — fallback para `index.html` nas rotas do React).
+
+Na raiz do repositório:
+
+```bash
+docker compose up -d --build
 ```
+
+O frontend fica em **http://localhost:8080**. A URL da API embutida no build é configurada em `docker-compose.yml` (`build.args.VITE_API_URL`), por padrão `http://localhost:3000` (acesso pelo navegador no host).
+
+## Estrutura de pastas (`src/`)
+
+| Pasta | Conteúdo |
+|-------|----------|
+| `api/` | Instância Axios, auth, projetos e usuários |
+| `components/` | Formulários e layouts reutilizáveis |
+| `pages/` | Telas por rota |
+| `routes/` | Definição de rotas e rota protegida |
+| `types/` | Tipos TypeScript do domínio |
+| `utils/` | Helpers (sessão, progresso de metas) |
+
+## API
+
+O frontend espera a API documentada no backend (NestJS). Em produção, configure `VITE_API_URL` para o mesmo host/porta que o navegador usará para chamar a API.

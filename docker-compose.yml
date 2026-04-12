@@ -1,8 +1,10 @@
+name: heroforce
+
 services:
   postgres:
     image: postgres:16
     container_name: heroforce_postgres
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_DB: heroforce
       POSTGRES_USER: postgres
@@ -11,18 +13,46 @@ services:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d heroforce']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   backend:
     build:
       context: ./backend
     container_name: heroforce_backend
-    restart: always
+    restart: unless-stopped
     depends_on:
-      - postgres
-    env_file:
-      - ./backend/.env
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: '5432'
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: heroforce
+      JWT_SECRET: dev-jwt-secret-change-in-production-use-long-random-string
+      JWT_EXPIRES_IN: 7d
+      FRONTEND_URL: http://localhost:8080,http://127.0.0.1:8080
     ports:
       - '3000:3000'
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:3000
+    container_name: heroforce_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - '8080:80'
 
 volumes:
   postgres_data:
