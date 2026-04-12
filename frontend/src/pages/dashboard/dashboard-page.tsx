@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getProjects, type Project } from '../../api/projects';
+import { getUsers, type User } from '../../api/users';
 
 type StoredUser = {
   id: string;
@@ -10,7 +11,9 @@ type StoredUser = {
   role: 'ADMIN' | 'USER';
 };
 
-function formatStatus(status: Project['status']) {
+type ProjectStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | '';
+
+function formatStatus(status: Exclude<ProjectStatus, ''>) {
   switch (status) {
     case 'PENDING':
       return 'Pendente';
@@ -27,9 +30,16 @@ export default function DashboardPage() {
   const navigate = useNavigate();
 
   const [projects, setProjects] = useState<Project[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [user, setUser] = useState<StoredUser | null>(null);
+
+  const [nameFilter, setNameFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<ProjectStatus>('');
+  const [responsibleFilter, setResponsibleFilter] = useState('');
+
+  const isAdmin = user?.role === 'ADMIN';
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -40,10 +50,32 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
+    async function loadUsers() {
+      try {
+        const data = await getUsers();
+        setUsers(data);
+      } catch {
+        // pode ignorar por enquanto
+      }
+    }
+
+    if (isAdmin) {
+      loadUsers();
+    }
+  }, [isAdmin]);
+
+  useEffect(() => {
     async function loadProjects() {
       try {
+        setIsLoading(true);
         setError('');
-        const data = await getProjects();
+
+        const data = await getProjects({
+          name: nameFilter,
+          status: statusFilter,
+          responsibleId: isAdmin ? responsibleFilter : undefined,
+        });
+
         setProjects(data);
       } catch {
         setError('Não foi possível carregar os projetos');
@@ -53,7 +85,7 @@ export default function DashboardPage() {
     }
 
     loadProjects();
-  }, []);
+  }, [nameFilter, statusFilter, responsibleFilter, isAdmin]);
 
   function handleLogout() {
     localStorage.removeItem('token');
@@ -93,11 +125,66 @@ export default function DashboardPage() {
       </header>
 
       <main className="mx-auto max-w-7xl px-6 py-8">
-        <div className="mb-8">
-          <h2 className="text-xl font-bold text-slate-900">Projetos</h2>
-          <p className="text-sm text-slate-600">
-            Visualize o andamento das missões e suas metas.
-          </p>
+        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900">Projetos</h2>
+            <p className="text-sm text-slate-600">
+              Visualize o andamento das missões e suas metas.
+            </p>
+          </div>
+
+          <div className={`grid gap-3 ${isAdmin ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Buscar por nome da missão
+              </label>
+              <input
+                type="text"
+                value={nameFilter}
+                onChange={(e) => setNameFilter(e.target.value)}
+                placeholder="Ex: Salvar Metrópolis"
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-slate-900"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Filtrar por status
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) =>
+                  setStatusFilter(e.target.value as ProjectStatus)
+                }
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-slate-900"
+              >
+                <option value="">Todos</option>
+                <option value="PENDING">Pendente</option>
+                <option value="IN_PROGRESS">Em andamento</option>
+                <option value="COMPLETED">Concluído</option>
+              </select>
+            </div>
+
+            {isAdmin && (
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Filtrar por herói
+                </label>
+                <select
+                  value={responsibleFilter}
+                  onChange={(e) => setResponsibleFilter(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-slate-900"
+                >
+                  <option value="">Todos</option>
+                  {users.map((listedUser) => (
+                    <option key={listedUser.id} value={listedUser.id}>
+                      {listedUser.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
         </div>
 
         {isLoading && (
@@ -139,7 +226,8 @@ export default function DashboardPage() {
 
                   <div className="flex flex-col gap-2 text-sm text-slate-600 md:text-right">
                     <span>
-                      <strong>Status:</strong> {formatStatus(project.status)}
+                      <strong>Status:</strong>{' '}
+                      {formatStatus(project.status)}
                     </span>
                     <span>
                       <strong>Progresso geral:</strong> {project.progress}%
