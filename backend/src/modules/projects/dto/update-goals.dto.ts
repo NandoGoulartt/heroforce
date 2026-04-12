@@ -6,7 +6,6 @@ import {
   IsInt,
   IsNotEmpty,
   IsString,
-  Max,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -17,10 +16,9 @@ class UpdateGoalDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({ example: 10 })
+  @ApiProperty({ example: 180 })
   @IsInt()
   @Min(0)
-  @Max(100)
   current: number;
 }
 

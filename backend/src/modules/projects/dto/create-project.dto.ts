@@ -55,15 +55,13 @@ class GoalDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({ example: 10 })
+  @ApiProperty({ example: 250 })
   @IsInt()
-  @Min(0)
-  @Max(100)
+  @Min(1)
   target: number;
 
-  @ApiProperty({ example: 0 })
+  @ApiProperty({ example: 120 })
   @IsInt()
   @Min(0)
-  @Max(100)
   current: number;
 }

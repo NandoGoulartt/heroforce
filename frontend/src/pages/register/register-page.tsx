@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { login } from '../../api/auth';
+import { register } from '../../api/auth';
 import { AuthCard } from '../../components/auth-card';
 
 const inputClass =
@@ -8,10 +8,12 @@ const inputClass =
 
 const labelClass = 'mb-2 block text-sm font-medium text-slate-300';
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const navigate = useNavigate();
 
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [character, setCharacter] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -20,8 +22,18 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
 
+    if (!name.trim()) {
+      setError('Informe seu nome');
+      return;
+    }
+
     if (!email.trim()) {
       setError('Informe seu email');
+      return;
+    }
+
+    if (!character.trim()) {
+      setError('Escolha seu personagem');
       return;
     }
 
@@ -33,14 +45,16 @@ export default function LoginPage() {
     try {
       setIsSubmitting(true);
 
-      await login({
+      await register({
+        name: name.trim(),
         email: email.trim(),
+        character: character.trim(),
         password,
       });
 
-      navigate('/dashboard');
+      navigate('/login');
     } catch {
-      setError('Email ou senha inválidos');
+      setError('Não foi possível realizar o cadastro');
     } finally {
       setIsSubmitting(false);
     }
@@ -48,8 +62,8 @@ export default function LoginPage() {
 
   return (
     <AuthCard
-      title="Login"
-      description="Acesse sua conta na HeroForce."
+      title="Cadastro de herói"
+      description="Crie sua conta para acessar a HeroForce."
       backHref="/"
     >
       {error ? (
@@ -61,6 +75,19 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className={labelClass}>
+            Nome
+          </label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Ex: Luiz Fernando"
+            className={inputClass}
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>
             Email
           </label>
           <input
@@ -68,6 +95,19 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="voce@email.com"
+            className={inputClass}
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>
+            Personagem
+          </label>
+          <input
+            type="text"
+            value={character}
+            onChange={(e) => setCharacter(e.target.value)}
+            placeholder="Ex: vigilante urbano, velocista, arqueiro..."
             className={inputClass}
           />
         </div>
@@ -90,17 +130,17 @@ export default function LoginPage() {
           disabled={isSubmitting}
           className="w-full rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-slate-950 shadow-[0_0_24px_-4px_rgba(245,158,11,0.45)] transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isSubmitting ? 'Entrando...' : 'Entrar'}
+          {isSubmitting ? 'Cadastrando...' : 'Criar conta'}
         </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-slate-400">
-        Ainda não tem conta?{' '}
+        Já tem conta?{' '}
         <Link
-          to="/register"
+          to="/login"
           className="font-medium text-amber-400 transition hover:text-amber-300"
         >
-          Cadastre-se
+          Fazer login
         </Link>
       </p>
     </AuthCard>
